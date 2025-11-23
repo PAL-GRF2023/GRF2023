@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<header>
+    <img src="https://pla.pna.ps/public/images/Logo.png" alt="Header Image Description" style="width: 320px; height: auto">
+</header>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palestine Grid to PAL-GRF2023 Conversion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .nav-buttons {
+            margin: 10px 0;
+        }
+        .nav-buttons a {
+            padding: 5px 10px;
+            margin: 0 2px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .nav-buttons a:hover {
+            background-color: #45a049;
+        }
+        .nav-buttons a.active {
+            background-color: grey;
+        }
+        .mode-section {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .mode-section.active {
+            display: block;
+        }
+        .input-group {
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        label {
+            display: inline-block;
+            width: 180px;
+            margin-right: 10px;
+        }
+        input, select {
+            padding: 3px;
+            width: 150px;
+        }
+        button {
+            padding: 5px 10px;
+            margin: 5px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            font-family: monospace;
+            margin-top: 10px;
+        }
+        .file-drop {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin: 10px 0;
+            background-color: #f9f9f9;
+            cursor: pointer;
+        }
+        .file-drop.dragover {
+            background-color: #e9f7ef;
+            border-color: #4CAF50;
+        }
+        .result {
+            font-weight: bold;
+            color: green;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .download-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .download-link:hover {
+            background-color: #0b7dda;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+        .checkbox-item input {
+            width: auto;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="nav-buttons">
+    <a href="index.html" class="button">Home</a>
+    <a href="parameters.html" class="button">Parameters</a>
+    <a href="geographic.html" class="button">Geographic</a>
+    <a href="Grid.html" class="button active">Grid</a>
+    <a href="Downloads.html" class="button">Downloads</a>
+</div>
+
+<h2>PAL-GRF2023 Coordinate Transformation</h2>
+
+<div class="mode-selector">
+    <button onclick="switchMode('single')" id="btn-single">Single Point</button>
+    <button onclick="switchMode('grid')" id="btn-grid">Grid Generator</button>
+    <button onclick="switchMode('textfile')" id="btn-textfile">Text File Transform</button>
+</div>
+
+<!-- Single Point Mode -->
+<div id="single-mode" class="mode-section active">
+    <p>Enter (E, N, h) (Pal1923 coordinates):</p>
+    <div class="input-group">
+        <label for="easting">Easting (m):</label>
+        <input type="number" id="easting" value="155580.5168">
+    </div>
+    <div class="input-group">
+        <label for="northing">Northing (m):</label>
+        <input type="number" id="northing" value="101424.7351">
+    </div>
+    <div class="input-group">
+        <label for="height">Height (m):</label>
+        <input type="number" id="height" value="933.4098">
+    </div>
+    <button onclick="calculateSingle()">Calculate</button>
+
+    <p>-----------------------------------------------</p>
+    <p>Palestine1923 Grid Coordinates (Modified TM)</p>
+    <p>-----------------------------------------------</p>
+    <p>Geographic Coordinates:</p>
+    <p><span class="result" id="latitude"></span>, <span class="result" id="longitude"></span>, <span class="result" id="heightResult"></span></p>
+    <p>Geocentric coordinates:</p>
+    <p><span class="result" id="x"></span>, <span class="result" id="y"></span>, <span class="result" id="z"></span></p>
+    <p>-----------------------------------------------</p>
+    <p>            PAL-GRF2023 Grid   </p>
+    <p>-----------------------------------------------</p>
+    <p>Geographic Coordinates:</p>
+    <p><span class="result" id="newlat"></span>, <span class="result" id="newlon"></span>, <span class="result" id="newh"></span></p>
+    <p>Geocentric coordinates:</p>
+    <p><span class="result" id="xt"></span>, <span class="result" id="yt"></span>, <span class="result" id="zt"></span></p>
+    <p>Grid Coordinates (E,N):</p>
+    <p><span class="result" id="E"></span>, <span class="result" id="N"></span></p>
+</div>
+
+<!-- Grid Mode -->
+<div id="grid-mode" class="mode-section">
+    <h3>Create Grid of Points</h3>
+    <div class="input-group">
+        <label for="eMin">Easting Min (m):</label>
+        <input type="number" id="eMin" value="155000">
+    </div>
+    <div class="input-group">
+        <label for="eMax">Easting Max (m):</label>
+        <input type="number" id="eMax" value="156000">
+    </div>
+    <div class="input-group">
+        <label for="nMin">Northing Min (m):</label>
+        <input type="number" id="nMin" value="101000">
+    </div>
+    <div class="input-group">
+        <label for="nMax">Northing Max (m):</label>
+        <input type="number" id="nMax" value="102000">
+    </div>
+    <div class="input-group">
+        <label for="step">Step Size (m):</label>
+        <input type="number" id="step" value="500">
+    </div>
+    <div class="input-group">
+        <label for="gridHeight">Height (m):</label>
+        <input type="number" id="gridHeight" value="933.4098">
+    </div>
+    
+    <div class="input-group">
+        <label>Output Fields:</label>
+        <div class="checkbox-group">
+            <div class="checkbox-item">
+                <input type="checkbox" id="gridFieldID" checked disabled>
+                <label for="gridFieldID">Point ID</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="gridFieldEPal" checked>
+                <label for="gridFieldEPal">E (Pal1923)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="gridFieldNPal" checked>
+                <label for="gridFieldNPal">N (Pal1923)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="gridFieldHPal" checked>
+                <label for="gridFieldHPal">H (Pal1923)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="gridFieldEGrf" checked>
+                <label for="gridFieldEGrf">E (PAL-GRF2023)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="gridFieldNGrf" checked>
+                <label for="gridFieldNGrf">N (PAL-GRF2023)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="gridFieldHGrf" checked>
+                <label for="gridFieldHGrf">H (PAL-GRF2023)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="gridFieldX" checked>
+                <label for="gridFieldX">X (GRF2023)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="gridFieldY" checked>
+                <label for="gridFieldY">Y (GRF2023)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="gridFieldZ" checked>
+                <label for="gridFieldZ">Z (GRF2023)</label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="input-group">
+        <label for="gridSeparator">Output Separator:</label>
+        <select id="gridSeparator">
+            <option value="tab">Tab</option>
+            <option value=",">Comma (,)</option>
+            <option value=";">Semicolon (;)</option>
+            <option value="space">Space</option>
+        </select>
+    </div>
+    
+    <button onclick="generateGrid()">Generate Grid</button>
+    <button onclick="downloadGridData()">Download Results</button>
+    
+    <textarea id="gridOutput" readonly placeholder="Grid results will appear here..."></textarea>
+</div>
+
+<!-- Text File Mode -->
+<div id="textfile-mode" class="mode-section">
+    <h3>Transform Text File</h3>
+    
+    <div class="input-group">
+        <label>Source File:</label>
+        <div id="text-drop-area" class="file-drop">
+            <p>Drag & drop a text file here or click to browse</p>
+            <input type="file" id="textFile" accept=".txt,.csv,.dat" style="display: none;">
+        </div>
+    </div>
+    
+    <div class="input-group">
+        <label>File Format:</label>
+        <div>
+            <input type="radio" id="format-id-en" name="fileFormat" value="id-en" checked>
+            <label for="format-id-en" style="width:auto">ID, E, N</label>
+            <input type="radio" id="format-id-enh" name="fileFormat" value="id-enh" style="margin-left:15px">
+            <label for="format-id-enh" style="width:auto">ID, E, N, H</label>
+            <input type="radio" id="format-id-enh-auto" name="fileFormat" value="id-enh-auto" style="margin-left:15px">
+            <label for="format-id-enh-auto" style="width:auto">Auto Detect</label>
+        </div>
+    </div>
+    
+    <div class="input-group">
+        <label>Input Separator:</label>
+        <select id="inputSeparator">
+            <option value="auto">Auto Detect</option>
+            <option value=",">Comma (,)</option>
+            <option value="tab">Tab</option>
+            <option value="space">Space</option>
+            <option value=";">Semicolon (;)</option>
+        </select>
+    </div>
+    
+    <div class="input-group" id="defaultHeightRow">
+        <label>Default Height (m):</label>
+        <input type="number" id="defaultHeight" value="0">
+        <span style="margin-left:10px">(Used when height not in file)</span>
+    </div>
+    
+    <div class="input-group">
+        <label>Output Separator:</label>
+        <select id="outputSeparator">
+            <option value=",">Comma (,)</option>
+            <option value="tab" selected>Tab</option>
+            <option value=";">Semicolon (;)</option>
+            <option value="space">Space</option>
+        </select>
+    </div>
+    
+    <div class="input-group">
+        <label>Output Fields:</label>
+        <div class="checkbox-group">
+            <div class="checkbox-item">
+                <input type="checkbox" id="fieldID" checked>
+                <label for="fieldID">Point ID</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="fieldEPal" checked>
+                <label for="fieldEPal">E (Pal1923)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="fieldNPal" checked>
+                <label for="fieldNPal">N (Pal1923)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="fieldHPal" checked>
+                <label for="fieldHPal">H (Pal1923)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="fieldEGrf" checked>
+                <label for="fieldEGrf">E (PAL-GRF2023)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="fieldNGrf" checked>
+                <label for="fieldNGrf">N (PAL-GRF2023)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="fieldHGrf" checked>
+                <label for="fieldHGrf">H (PAL-GRF2023)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="fieldX" checked>
+                <label for="fieldX">X (GRF2023)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="fieldY" checked>
+                <label for="fieldY">Y (GRF2023)</label>
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" id="fieldZ" checked>
+                <label for="fieldZ">Z (GRF2023)</label>
+            </div>
+        </div>
+    </div>
+    
+    <button id="processTextBtn" onclick="processTextFile()" disabled>Process Text File</button>
+    <button id="downloadTextBtn" onclick="downloadTextResults()" disabled>Download Results</button>
+    
+    <div id="text-preview-section" style="margin-top: 20px; display: none;">
+        <h4>Preview of Transformed Data (First 10 Points)</h4>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table id="text-preview-table">
+                <thead>
+                    <tr id="preview-headers"></tr>
+                </thead>
+                <tbody id="preview-data"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<p>Programmed by: Dr. Ghadi Zakarneh</p>
+<a href="mailto:ghadi@ppu.edu">Send email: ghadi@ppu.edu</a><br>
+<a href="https://staff.ppu.edu/ghadi">staff.ppu.edu/ghadi</a>
+
+<script>
+    // GRS80 ellipsoid parameters
+    const a = 6378137; // semi-major axis in meters
+    const f = 1 / 298.257222101; // flattening
+    const b = a * (1 - f); // semi-minor axis
+    const e2 = 2 * f - f * f; // first eccentricity squared
+
+    let gridResults = [];
+    let textFileData = [];
+    let transformedTextData = [];
+
+    // Pal1923 modified (TM) projection parameters
+    function ENToLLHPal1923Grid(easting, northing)  {
+        const lat0 = 31.734393611111 * Math.PI / 180; // latitude of origin
+        const lon0 = 35.204516944444 * Math.PI / 180; // central meridian
+        const k0 = 1.0000067; // scale factor
+        const falseEasting = 169529.584; // false easting
+        const falseNorthing = 126907.390; // false northing
+
+        const lat0rad = lat0;
+        const lon0rad = lon0;
+        const ee2 = e2 / (1 - e2);
+        const fe = falseEasting;
+        const fn = falseNorthing;
+
+        const L0 = a * ((1 - e2 / 4 - 3 * Math.pow(e2, 2) / 64 - 5 * Math.pow(e2, 3) / 256) * lat0rad -
+            (3 * e2 / 8 + 3 * Math.pow(e2, 2) / 32 + 45 * Math.pow(e2, 3) / 1024) * Math.sin(2 * lat0rad) +
+            (15 * Math.pow(e2, 2) / 256 + 45 * Math.pow(e2, 3) / 1024) * Math.sin(4 * lat0rad) -
+            (35 * Math.pow(e2, 3) / 3072) * Math.sin(6 * lat0rad));
+        const L1 = L0 + (northing - fn) / k0;
+
+        const MU1 = L1 / (a * (1 - e2 / 4 - 3 * Math.pow(e2, 2) / 64 - 5 * Math.pow(e2, 3) / 256));
+
+        const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
+        const f1 = MU1 + ((3 * e1 / 2) - (27 * Math.pow(e1, 3) / 32)) * Math.sin(2 * MU1) +
+            ((21 * Math.pow(e1, 2) / 16) - (55 * Math.pow(e1, 4) / 32)) * Math.sin(4 * MU1) +
+            (151 * Math.pow(e1, 3) / 96) * Math.sin(6 * MU1) +
+            (1097 * Math.pow(e1, 4) / 512) * Math.sin(8 * MU1); // lat
+
+        const t1 = Math.pow(Math.tan(f1), 2);
+        const C1 = ee2 * Math.pow(Math.cos(lat0rad), 2); // C
+
+        const v1 = a / Math.sqrt(1 - e2 * Math.pow(Math.sin(f1), 2));
+        const p1 = a * (1 - e2) / Math.pow(1 - e2 * Math.pow(Math.sin(f1), 2), 1.5);
+        const D = (easting - fe) / (v1 * k0); // D
+
+        const latrad = f1 - (v1 * Math.tan(f1) / p1) * (Math.pow(D, 2) / 2 -
+            (5 + 3 * t1 + 10 * C1 - 4 * Math.pow(C1, 2) - 9 * ee2) * Math.pow(D, 4) / 24 +
+            (61 + 90 * t1 + 298 * C1 + 45 * Math.pow(t1, 2) - 252 * ee2 - 3 * Math.pow(C1, 2)) * Math.pow(D, 6) / 720);
+
+        const lonrad = lon0rad + (D - (1 + 2 * t1 + C1) * Math.pow(D, 3) / 6 +
+            (5 - 2 * C1 + 28 * t1 - 3 * Math.pow(C1, 2) + 8 * ee2 + 24 * Math.pow(t1, 2)) * Math.pow(D, 5) / 120) / Math.cos(f1);
+
+        // Convert radians to degrees
+        const lat1 = latrad * 180 / Math.PI;
+        const lon1 = lonrad * 180 / Math.PI;
+
+        return { lat1, lon1};
+    }
+
+    function latLonHeightToXYZ(lat, lon, height) {
+        const latRad = lat * Math.PI / 180;
+        const lonRad = lon * Math.PI / 180;
+        const N = a / Math.sqrt(1 - e2 * Math.sin(latRad) * Math.sin(latRad));
+        const X = (N + height) * Math.cos(latRad) * Math.cos(lonRad);
+        const Y = (N + height) * Math.cos(latRad) * Math.sin(lonRad);
+        const Z = (N * (1 - e2) + height) * Math.sin(latRad);
+        return { X, Y, Z };
+    }
+
+    function transformXYZ(X1, Y1, Z1) {
+        // 7-parameter transformation parameters (example values)
+        const dx2 = 0.3889; // X translation
+        const dy2 = -0.2489; // Y translation
+        const dz2 = -0.3589; // Z translation
+        const dx = 24.0024; // X translation (meters)
+        const dy = 17.1032; // Y translation (meters)
+        const dz = 17.8444; // Z translation (meters)
+        const rx = 0.0000016003; // X rotation (radians)
+        const ry = 0.000008982; // Y rotation (radians)
+        const rz = -0.0000080949; // Z rotation (radians)
+        const scale = -0.0000054248; // scale factor ppm
+
+        const X2 = X1 - dx2;
+        const Y2 = Y1 - dy2;
+        const Z2 = Z1 - dz2;
+
+        const Xt = X2 + dx + scale * X2 + rz * Y2 - ry * Z2;
+        const Yt = Y2 + dy + scale * Y2 - rz * X2 + rx * Z2;
+        const Zt = Z2 + dz + scale * Z2 + ry * X2 - rx * Y2;
+
+        return { Xt, Yt, Zt };
+    }
+
+    function xyzToLatLonHeight(Xt, Yt, Zt) {
+        const p = Math.sqrt(Xt * Xt + Yt * Yt); // distance from Z-axis
+        let lat3 = Math.atan2(Zt, p * (1 - e2)); // initial latitude estimate
+        let height3 = 0;
+        let N = 0;
+
+        // Iterate to improve accuracy
+        for (let i = 0; i < 15; i++) {
+            N = a / Math.sqrt(1 - e2 * Math.sin(lat3) * Math.sin(lat3));
+            height3 = p / Math.cos(lat3) - N;
+            const latNew = Math.atan2(Zt, p * (1 - e2 * (N / (N + height3))));
+            if (Math.abs(latNew - lat3) < 1e-12) break;
+            lat3 = latNew;
+        }
+
+        const lon3 = Math.atan2(Yt, Xt); // longitude
+        const newHeight = height3;
+        const newLat = lat3 * 180 / Math.PI;
+        const newLon = lon3 * 180 / Math.PI;
+
+        return { newLat, newLon, newHeight };
+    }
+
+    function latLonToPalGRF(lat2, lon2) {
+        const lat0 = 31.7777777777 * Math.PI / 180; // latitude of origin
+        const lon0 = 35.235 * Math.PI / 180; // central meridian
+        const k0 = 1.0000030; // scale factor
+        const falseEasting = 220000.000;
+        const falseNorthing = 500000.000;
+
+        const lat4 = lat2 * Math.PI / 180;
+        const lon4 = lon2 * Math.PI / 180;
+
+        const nu = a / Math.sqrt(1 - e2 * Math.sin(lat4) * Math.sin(lat4));
+        const A = (lon4 - lon0) * Math.cos(lat4);
+        const T = Math.tan(lat4) * Math.tan(lat4);
+        const C = e2 * Math.cos(lat4) * Math.cos(lat4) / (1 - e2);
+        const M = a * ((1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256) * lat4 -
+            (3 * e2 / 8 + 3 * e2 * e2 / 32 + 45 * e2 * e2 * e2 / 1024) * Math.sin(2 * lat4) +
+            (15 * e2 * e2 / 256 + 45 * e2 * e2 * e2 / 1024) * Math.sin(4 * lat4) -
+            (35 * e2 * e2 * e2 / 3072) * Math.sin(6 * lat4));
+
+        const M0 = a * ((1 - e2 / 4 - 3 * e2 * e2 / 64 - 5 * e2 * e2 * e2 / 256) * lat0 -
+            (3 * e2 / 8 + 3 * e2 * e2 / 32 + 45 * e2 * e2 * e2 / 1024) * Math.sin(2 * lat0) +
+            (15 * e2 * e2 / 256 + 45 * e2 * e2 * e2 / 1024) * Math.sin(4 * lat0) -
+            (35 * e2 * e2 * e2 / 3072) * Math.sin(6 * lat0));
+
+        const easting1 = falseEasting + k0 * nu * (A + (1 - T + C) * A * A * A / 6 +
+            (5 - 18 * T + T * T + 72 * C - 58 * e2) * A * A * A * A * A / 120);
+
+        const northing1 = falseNorthing + k0 * (M - M0 + nu * Math.tan(lat4) * (A * A / 2 +
+            (5 - T + 9 * C + 4 * C * C) * A * A * A * A / 24 +
+            (61 - 58 * T + T * T + 600 * C - 330 * e2) * A * A * A * A * A * A / 720));
+
+        return { easting1, northing1 };
+    }
+
+    // Mode switching functionality
+    function switchMode(mode) {
+        // Update button states
+        document.getElementById('btn-single').classList.toggle('active', mode === 'single');
+        document.getElementById('btn-grid').classList.toggle('active', mode === 'grid');
+        document.getElementById('btn-textfile').classList.toggle('active', mode === 'textfile');
+        
+        // Show/hide mode sections
+        document.getElementById('single-mode').classList.toggle('active', mode === 'single');
+        document.getElementById('grid-mode').classList.toggle('active', mode === 'grid');
+        document.getElementById('textfile-mode').classList.toggle('active', mode === 'textfile');
+    }
+
+    // Single point calculation
+    function calculateSingle() {
+        try {
+            const easting = parseFloat(document.getElementById('easting').value);
+            const northing = parseFloat(document.getElementById('northing').value);
+            const height = parseFloat(document.getElementById('height').value);
+
+            const {lat1 ,lon1 } = ENToLLHPal1923Grid(easting, northing);
+            const { X, Y, Z } = latLonHeightToXYZ(lat1, lon1, height);
+            const { Xt, Yt, Zt } = transformXYZ(X, Y, Z);
+            const { newLat, newLon, newHeight } = xyzToLatLonHeight(Xt, Yt, Zt);
+            const { easting1, northing1 } = latLonToPalGRF(newLat, newLon);
+
+            // Display results
+            document.getElementById('latitude').innerText = lat1.toFixed(8);
+            document.getElementById('longitude').innerText = lon1.toFixed(8);
+            document.getElementById('heightResult').innerText = height.toFixed(4);
+            document.getElementById('x').innerText = X.toFixed(4);
+            document.getElementById('y').innerText = Y.toFixed(4);
+            document.getElementById('z').innerText = Z.toFixed(4);
+            document.getElementById('xt').innerText = Xt.toFixed(4);
+            document.getElementById('yt').innerText = Yt.toFixed(4);
+            document.getElementById('zt').innerText = Zt.toFixed(4);
+            document.getElementById('newlat').innerText = newLat.toFixed(8);
+            document.getElementById('newlon').innerText = newLon.toFixed(8);
+            document.getElementById('newh').innerText = newHeight.toFixed(4);
+            document.getElementById('E').innerText = easting1.toFixed(4);
+            document.getElementById('N').innerText = northing1.toFixed(4);
+        } catch (error) {
+            alert('Error in calculation: ' + error.message);
+            console.error(error);
+        }
+    }
+
+    // Grid generation
+    function generateGrid() {
+        try {
+            const eMin = parseFloat(document.getElementById('eMin').value);
+            const eMax = parseFloat(document.getElementById('eMax').value);
+            const nMin = parseFloat(document.getElementById('nMin').value);
+            const nMax = parseFloat(document.getElementById('nMax').value);
+            const step = parseFloat(document.getElementById('step').value);
+            const h = parseFloat(document.getElementById('gridHeight').value);
+            const separator = document.getElementById('gridSeparator').value;
+
+            gridResults = [];
+            let output = '';
+            
+            // Create header based on selected fields
+            const headers = [];
+            if (document.getElementById('gridFieldEPal').checked) headers.push('E_Pal1923');
+            if (document.getElementById('gridFieldNPal').checked) headers.push('N_Pal1923');
+            if (document.getElementById('gridFieldHPal').checked) headers.push('H_Pal1923');
+            if (document.getElementById('gridFieldEGrf').checked) headers.push('E_PalGRF');
+            if (document.getElementById('gridFieldNGrf').checked) headers.push('N_PalGRF');
+            if (document.getElementById('gridFieldHGrf').checked) headers.push('H_PalGRF');
+            if (document.getElementById('gridFieldX').checked) headers.push('X_GRF');
+            if (document.getElementById('gridFieldY').checked) headers.push('Y_GRF');
+            if (document.getElementById('gridFieldZ').checked) headers.push('Z_GRF');
+            
+            // Determine separator character
+            let sepChar = ',';
+            if (separator === 'tab') sepChar = '\t';
+            else if (separator === ';') sepChar = ';';
+            else if (separator === 'space') sepChar = ' ';
+            
+            // Add header
+            output = headers.join(sepChar) + '\n';
+
+            let pointId = 1;
+            let e = eMin;
+            while (e <= eMax) {
+                let n = nMin;
+                while (n <= nMax) {
+                    try {
+                        const { lat1, lon1 } = ENToLLHPal1923Grid(e, n);
+                        const { X, Y, Z } = latLonHeightToXYZ(lat1, lon1, h);
+                        const { Xt, Yt, Zt } = transformXYZ(X, Y, Z);
+                        const { newLat, newLon, newHeight } = xyzToLatLonHeight(Xt, Yt, Zt);
+                        const { easting1, northing1 } = latLonToPalGRF(newLat, newLon);
+                        
+                        // Create row based on selected fields
+                        const row = [];
+                        row.push(pointId.toString());
+                        if (document.getElementById('gridFieldEPal').checked) row.push(e.toFixed(4));
+                        if (document.getElementById('gridFieldNPal').checked) row.push(n.toFixed(4));
+                        if (document.getElementById('gridFieldHPal').checked) row.push(h.toFixed(4));
+                        if (document.getElementById('gridFieldEGrf').checked) row.push(easting1.toFixed(4));
+                        if (document.getElementById('gridFieldNGrf').checked) row.push(northing1.toFixed(4));
+                        if (document.getElementById('gridFieldHGrf').checked) row.push(newHeight.toFixed(4));
+                        if (document.getElementById('gridFieldX').checked) row.push(Xt.toFixed(6));
+                        if (document.getElementById('gridFieldY').checked) row.push(Yt.toFixed(6));
+                        if (document.getElementById('gridFieldZ').checked) row.push(Zt.toFixed(6));
+                        
+                        gridResults.push(row);
+                        output += row.join(sepChar) + '\n';
+                    } catch (error) {
+                        console.error(`Error calculating point at E=${e}, N=${n}:`, error);
+                    }
+                    n += step;
+                    pointId++;
+                }
+                e += step;
+            }
+            
+            document.getElementById('gridOutput').value = output;
+        } catch (error) {
+            alert('Error generating grid: ' + error.message);
+            console.error(error);
+        }
+    }
+
+    // Download grid data
+    function downloadGridData() {
+        if (gridResults.length === 0) {
+            alert('No grid data to download. Please generate the grid first.');
+            return;
+        }
+        
+        const separator = document.getElementById('gridSeparator').value;
+        const content = document.getElementById('gridOutput').value;
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `pal1923_to_grf2023_grid_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // Text File Transformation Functions
+    document.getElementById('text-drop-area').addEventListener('click', function() {
+        document.getElementById('textFile').click();
+    });
+
+    document.getElementById('textFile').addEventListener('change', handleTextFileSelect);
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        document.getElementById('text-drop-area').addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        document.getElementById('text-drop-area').addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        document.getElementById('text-drop-area').addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+        document.getElementById('text-drop-area').classList.add('dragover');
+    }
+
+    function unhighlight() {
+        document.getElementById('text-drop-area').classList.remove('dragover');
+    }
+
+    function handleTextFileSelect(e) {
+        const file = e.target.files[0] || e.dataTransfer.files[0];
+        if (file) {
+            // Update UI
+            document.getElementById('text-drop-area').innerHTML = `<p>Selected: ${file.name}</p>`;
+            document.getElementById('processTextBtn').disabled = false;
+            
+            // Handle auto detection for format
+            const formatRadios = document.getElementsByName('fileFormat');
+            for (let i = 0; i < formatRadios.length; i++) {
+                if (formatRadios[i].value === 'id-enh-auto') {
+                    formatRadios[i].checked = true;
+                    break;
+                }
+            }
+        } else {
+            document.getElementById('text-drop-area').innerHTML = '<p>Drag & drop a text file here or click to browse</p>';
+            document.getElementById('processTextBtn').disabled = true;
+        }
+    }
+
+    function processTextFile() {
+        const file = document.getElementById('textFile').files[0];
+        if (!file) {
+            alert('Please select a file first');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const content = e.target.result;
+            parseAndTransformTextFile(content);
+        };
+        reader.readAsText(file);
+    }
+
+    function parseAndTransformTextFile(content) {
+        try {
+            // Clear previous results
+            textFileData = [];
+            transformedTextData = [];
+            const previewHeaders = document.getElementById('preview-headers');
+            const previewData = document.getElementById('preview-data');
+            previewHeaders.innerHTML = '';
+            previewData.innerHTML = '';
+            
+            // Get format selection
+            let format = 'id-enh-auto';
+            const formatRadios = document.getElementsByName('fileFormat');
+            for (let i = 0; i < formatRadios.length; i++) {
+                if (formatRadios[i].checked) {
+                    format = formatRadios[i].value;
+                    break;
+                }
+            }
+            
+            // Get separators
+            const inputSeparator = document.getElementById('inputSeparator').value;
+            const outputSeparator = document.getElementById('outputSeparator').value;
+            const defaultHeight = parseFloat(document.getElementById('defaultHeight').value);
+            
+            // Determine actual separator if auto-detect is selected
+            let sepChar = ',';
+            if (inputSeparator === 'tab') sepChar = '\t';
+            else if (inputSeparator === ';') sepChar = ';';
+            else if (inputSeparator === 'space') sepChar = ' ';
+            else if (inputSeparator === 'auto') {
+                // Auto-detect separator
+                if (content.includes('\t')) sepChar = '\t';
+                else if (content.includes(';')) sepChar = ';';
+                else if (content.includes(',')) sepChar = ',';
+                else sepChar = ' ';
+            }
+            
+            // Parse the content
+            const lines = content.trim().split('\n');
+            let hasHeader = false;
+            let headerLine = '';
+            
+            // Check if first line might be a header
+            if (lines.length > 0) {
+                headerLine = lines[0].trim().toLowerCase();
+                if (headerLine.includes('id') || headerLine.includes('point') || 
+                    headerLine.includes('easting') || headerLine.includes('northing') ||
+                    headerLine.includes('east') || headerLine.includes('north')) {
+                    hasHeader = true;
+                }
+            }
+            
+            const startIndex = hasHeader ? 1 : 0;
+            
+            // Auto-detect format if needed
+            if (format === 'id-enh-auto' && lines.length > startIndex) {
+                const sampleLine = lines[startIndex].trim();
+                const parts = sampleLine.split(sepChar).filter(p => p.trim() !== '');
+                if (parts.length >= 4) {
+                    format = 'id-enh';
+                } else if (parts.length >= 3) {
+                    format = 'id-en';
+                }
+            }
+            
+            // Parse data lines
+            for (let i = startIndex; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line === '') continue;
+                
+                const parts = line.split(sepChar).filter(p => p.trim() !== '').map(p => p.trim());
+                
+                if ((format === 'id-en' && parts.length < 3) || 
+                    (format === 'id-enh' && parts.length < 4)) {
+                    continue; // Skip invalid lines
+                }
+                
+                try {
+                    const id = parts[0];
+                    const e = parseFloat(parts[1]);
+                    const n = parseFloat(parts[2]);
+                    const h = format === 'id-enh' && parts.length > 3 ? parseFloat(parts[3]) : defaultHeight;
+                    
+                    if (!isNaN(e) && !isNaN(n) && !isNaN(h)) {
+                        textFileData.push({ id, e, n, h });
+                    }
+                } catch (error) {
+                    console.error('Error parsing line:', lines[i], error);
+                }
+            }
+            
+            if (textFileData.length === 0) {
+                alert('No valid points found in the file. Please check the format and separators.');
+                document.getElementById('downloadTextBtn').disabled = true;
+                document.getElementById('text-preview-section').style.display = 'none';
+                return;
+            }
+            
+            // Transform the data
+            for (let i = 0; i < textFileData.length; i++) {
+                const point = textFileData[i];
+                try {
+                    const { lat1, lon1 } = ENToLLHPal1923Grid(point.e, point.n);
+                    const { X, Y, Z } = latLonHeightToXYZ(lat1, lon1, point.h);
+                    const { Xt, Yt, Zt } = transformXYZ(X, Y, Z);
+                    const { newLat, newLon, newHeight } = xyzToLatLonHeight(Xt, Yt, Zt);
+                    const { easting1, northing1 } = latLonToPalGRF(newLat, newLon);
+                    
+                    transformedTextData.push({
+                        id: point.id,
+                        e_pal1923: point.e,
+                        n_pal1923: point.n,
+                        h_pal1923: point.h,
+                        e_palgrf: easting1,
+                        n_palgrf: northing1,
+                        h_palgrf: newHeight,
+                        x_grf: Xt,
+                        y_grf: Yt,
+                        z_grf: Zt
+                    });
+                } catch (error) {
+                    console.error(`Error transforming point ${point.id}:`, error);
+                }
+            }
+            
+            // Display preview of first 10 points
+            const outputFields = {
+                'ID': document.getElementById('fieldID').checked,
+                'E_Pal1923': document.getElementById('fieldEPal').checked,
+                'N_Pal1923': document.getElementById('fieldNPal').checked,
+                'H_Pal1923': document.getElementById('fieldHPal').checked,
+                'E_PalGRF': document.getElementById('fieldEGrf').checked,
+                'N_PalGRF': document.getElementById('fieldNGrf').checked,
+                'H_PalGRF': document.getElementById('fieldHGrf').checked,
+                'X_GRF': document.getElementById('fieldX').checked,
+                'Y_GRF': document.getElementById('fieldY').checked,
+                'Z_GRF': document.getElementById('fieldZ').checked
+            };
+            
+            // Create table headers
+            for (const field in outputFields) {
+                if (outputFields[field]) {
+                    const th = document.createElement('th');
+                    th.textContent = field;
+                    previewHeaders.appendChild(th);
+                }
+            }
+            
+            // Add data rows (max 10)
+            const maxPreview = Math.min(10, transformedTextData.length);
+            for (let i = 0; i < maxPreview; i++) {
+                const tr = document.createElement('tr');
+                const point = transformedTextData[i];
+                
+                if (outputFields['ID']) {
+                    const td = document.createElement('td');
+                    td.textContent = point.id;
+                    tr.appendChild(td);
+                }
+                if (outputFields['E_Pal1923']) {
+                    const td = document.createElement('td');
+                    td.textContent = point.e_pal1923.toFixed(4);
+                    tr.appendChild(td);
+                }
+                if (outputFields['N_Pal1923']) {
+                    const td = document.createElement('td');
+                    td.textContent = point.n_pal1923.toFixed(4);
+                    tr.appendChild(td);
+                }
+                if (outputFields['H_Pal1923']) {
+                    const td = document.createElement('td');
+                    td.textContent = point.h_pal1923.toFixed(4);
+                    tr.appendChild(td);
+                }
+                if (outputFields['E_PalGRF']) {
+                    const td = document.createElement('td');
+                    td.textContent = point.e_palgrf.toFixed(4);
+                    tr.appendChild(td);
+                }
+                if (outputFields['N_PalGRF']) {
+                    const td = document.createElement('td');
+                    td.textContent = point.n_palgrf.toFixed(4);
+                    tr.appendChild(td);
+                }
+                if (outputFields['H_PalGRF']) {
+                    const td = document.createElement('td');
+                    td.textContent = point.h_palgrf.toFixed(4);
+                    tr.appendChild(td);
+                }
+                if (outputFields['X_GRF']) {
+                    const td = document.createElement('td');
+                    td.textContent = point.x_grf.toFixed(6);
+                    tr.appendChild(td);
+                }
+                if (outputFields['Y_GRF']) {
+                    const td = document.createElement('td');
+                    td.textContent = point.y_grf.toFixed(6);
+                    tr.appendChild(td);
+                }
+                if (outputFields['Z_GRF']) {
+                    const td = document.createElement('td');
+                    td.textContent = point.z_grf.toFixed(6);
+                    tr.appendChild(td);
+                }
+                
+                previewData.appendChild(tr);
+            }
+            
+            document.getElementById('text-preview-section').style.display = 'block';
+            document.getElementById('downloadTextBtn').disabled = false;
+            alert(`Successfully transformed ${transformedTextData.length} points.`);
+            
+        } catch (error) {
+            alert('Error processing text file: ' + error.message);
+            console.error(error);
+        }
+    }
+
+    function downloadTextResults() {
+        if (transformedTextData.length === 0) {
+            alert('No transformed data to download.');
+            return;
+        }
+        
+        try {
+            // Get output settings
+            const outputSeparator = document.getElementById('outputSeparator').value;
+            const outputFields = {
+                'ID': document.getElementById('fieldID').checked,
+                'E_Pal1923': document.getElementById('fieldEPal').checked,
+                'N_Pal1923': document.getElementById('fieldNPal').checked,
+                'H_Pal1923': document.getElementById('fieldHPal').checked,
+                'E_PalGRF': document.getElementById('fieldEGrf').checked,
+                'N_PalGRF': document.getElementById('fieldNGrf').checked,
+                'H_PalGRF': document.getElementById('fieldHGrf').checked,
+                'X_GRF': document.getElementById('fieldX').checked,
+                'Y_GRF': document.getElementById('fieldY').checked,
+                'Z_GRF': document.getElementById('fieldZ').checked
+            };
+            
+            // Determine separator character
+            let sepChar = ',';
+            if (outputSeparator === 'tab') sepChar = '\t';
+            else if (outputSeparator === ';') sepChar = ';';
+            else if (outputSeparator === 'space') sepChar = ' ';
+            
+            // Create CSV content
+            let csvContent = '';
+            
+            // Add header
+            const headers = [];
+            for (const field in outputFields) {
+                if (outputFields[field]) headers.push(field);
+            }
+            csvContent += headers.join(sepChar) + '\n';
+            
+            // Add data rows
+            transformedTextData.forEach(point => {
+                const row = [];
+                if (outputFields['ID']) row.push(point.id);
+                if (outputFields['E_Pal1923']) row.push(point.e_pal1923.toFixed(4));
+                if (outputFields['N_Pal1923']) row.push(point.n_pal1923.toFixed(4));
+                if (outputFields['H_Pal1923']) row.push(point.h_pal1923.toFixed(4));
+                if (outputFields['E_PalGRF']) row.push(point.e_palgrf.toFixed(4));
+                if (outputFields['N_PalGRF']) row.push(point.n_palgrf.toFixed(4));
+                if (outputFields['H_PalGRF']) row.push(point.h_palgrf.toFixed(4));
+                if (outputFields['X_GRF']) row.push(point.x_grf.toFixed(6));
+                if (outputFields['Y_GRF']) row.push(point.y_grf.toFixed(6));
+                if (outputFields['Z_GRF']) row.push(point.z_grf.toFixed(6));
+                csvContent += row.join(sepChar) + '\n';
+            });
+            
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/plain;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pal1923_to_grf2023_transformed_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            alert('Error downloading file: ' + error.message);
+            console.error(error);
+        }
+    }
+
+    // Update UI based on format selection
+    document.querySelectorAll('input[name="fileFormat"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const format = this.value;
+            const defaultHeightRow = document.getElementById('defaultHeightRow');
+            if (format === 'id-en') {
+                defaultHeightRow.style.display = 'flex'; // Show default height
+            } else {
+                defaultHeightRow.style.display = 'none'; // Hide default height
+            }
+        });
+    });
+
+    // Initialize the page with single point mode
+    switchMode('single');
+</script>
+
+</body>
+</html>
