@@ -318,7 +318,7 @@
             margin-bottom: 8px;
         }
         
-        .polynomial-selector {
+        .transformation-settings {
             margin: 20px 0;
             padding: 15px;
             background: rgba(52, 152, 219, 0.08);
@@ -326,7 +326,7 @@
             border: 1px solid var(--secondary-color);
         }
         
-        .selector-title {
+        .settings-title {
             font-weight: 600;
             color: var(--primary-color);
             margin-bottom: 10px;
@@ -334,12 +334,12 @@
             align-items: center;
         }
         
-        .selector-title i {
+        .settings-title i {
             margin-right: 8px;
             color: var(--secondary-color);
         }
         
-        select {
+        select, input[type="number"] {
             padding: 10px;
             border-radius: 6px;
             border: 1px solid #ddd;
@@ -347,6 +347,25 @@
             margin-top: 8px;
             width: 100%;
             background: white;
+        }
+        
+        .settings-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .settings-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .settings-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: var(--dark-color);
         }
         
         .spline-info {
@@ -385,6 +404,10 @@
             .equation-display {
                 font-size: 1rem;
             }
+            
+            .settings-group {
+                flex-direction: column;
+            }
         }
         
         .spline-equation {
@@ -401,6 +424,19 @@
             color: var(--warning-color);
             display: none;
         }
+        
+        .precision-warning {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--warning-color);
+        }
+        
+        .precision-example {
+            margin-top: 5px;
+            font-size: 0.85rem;
+            color: var(--dark-color);
+            font-family: monospace;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -408,7 +444,7 @@
     <div class="container">
         <header>
             <h1><i class="fas fa-calculator"></i> Coordinate Transformation Calculator</h1>
-            <p class="subtitle">Upload coordinate data files to compute least squares transformation parameters between two coordinate systems. Select transformation model: polynomial or spline.</p>
+            <p class="subtitle">Upload coordinate data files to compute least squares transformation parameters between two coordinate systems. Select transformation model and precision settings.</p>
         </header>
         
         <div class="main-content">
@@ -418,16 +454,29 @@
                     <h2 class="card-title">Upload Coordinate Data</h2>
                 </div>
                 
-                <div class="polynomial-selector">
-                    <div class="selector-title">
-                        <i class="fas fa-sliders-h"></i> Transformation Model
+                <div class="transformation-settings">
+                    <div class="settings-title">
+                        <i class="fas fa-sliders-h"></i> Transformation Settings
                     </div>
-                    <select id="transformationType">
-                        <option value="1" selected>1st Order Polynomial (Affine)</option>
-                        <option value="2">2nd Order Polynomial</option>
-                        <option value="3">3rd Order Polynomial</option>
-                        <option value="spline">Spline Transformation (Thin Plate)</option>
-                    </select>
+                    
+                    <div class="settings-group">
+                        <div class="settings-item">
+                            <label class="settings-label" for="transformationType">Transformation Model</label>
+                            <select id="transformationType">
+                                <option value="1" selected>1st Order Polynomial (Affine)</option>
+                                <option value="2">2nd Order Polynomial</option>
+                                <option value="3">3rd Order Polynomial</option>
+                                <option value="spline">Spline Transformation (Thin Plate)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="settings-item">
+                            <label class="settings-label" for="decimalDigits">Decimal Precision</label>
+                            <input type="number" id="decimalDigits" min="0" max="15" value="6">
+                            <div class="precision-example">Example: 1234.567890 (6 digits)</div>
+                            <div class="precision-warning">Higher precision increases file size and may show insignificant digits.</div>
+                        </div>
+                    </div>
                     
                     <div class="spline-info" id="splineInfo">
                         <i class="fas fa-info-circle"></i> Spline transformation uses radial basis functions for non-linear deformation modeling. Requires at least 4 control points.
@@ -509,6 +558,10 @@
                         <div class="param-label">Parameters Count</div>
                         <div class="param-value" id="paramCountResult">6</div>
                     </div>
+                    <div class="param-item">
+                        <div class="param-label">Decimal Precision</div>
+                        <div class="param-value" id="precisionResult">6 digits</div>
+                    </div>
                 </div>
                 
                 <div class="results-grid">
@@ -583,12 +636,14 @@
         const splineStatus = document.getElementById('splineStatus');
         const errorMessage = document.getElementById('errorMessage');
         const transformationType = document.getElementById('transformationType');
+        const decimalDigits = document.getElementById('decimalDigits');
         const equationE = document.getElementById('equationE');
         const equationN = document.getElementById('equationN');
         const splineInfo = document.getElementById('splineInfo');
         const splineWarning = document.getElementById('splineWarning');
         const transformationTypeResult = document.getElementById('transformationTypeResult');
         const paramCountResult = document.getElementById('paramCountResult');
+        const precisionResult = document.getElementById('precisionResult');
         
         // Result elements
         const xResult = document.getElementById('xResult');
@@ -610,6 +665,7 @@
         let coordinateData = [];
         let results = null;
         let currentTransformation = '1'; // Default to 1st order polynomial
+        let digits = 6; // Default decimal precision
         
         // Event listeners for drag and drop
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -654,6 +710,20 @@
         // Handle file selection
         fileInput.addEventListener('change', function() {
             handleFiles(this.files);
+        });
+        
+        // Handle decimal digits change
+        decimalDigits.addEventListener('change', function() {
+            const value = parseInt(this.value);
+            if (value < 0) this.value = 0;
+            if (value > 15) this.value = 15;
+            digits = parseInt(this.value);
+            precisionResult.textContent = `${digits} digits`;
+            
+            // If results are already computed, update the display
+            if (results) {
+                displayResults();
+            }
         });
         
         function handleFiles(files) {
@@ -815,8 +885,8 @@
                         equationN.innerHTML = 'N<sub>2</sub> = b<sub>1</sub> + b<sub>2</sub>·E<sub>1</sub> + b<sub>3</sub>·N<sub>1</sub> + b<sub>4</sub>·E<sub>1</sub>N<sub>1</sub> + b<sub>5</sub>·E<sub>1</sub><sup>2</sup> + b<sub>6</sub>·N<sub>1</sub><sup>2</sup>';
                         break;
                     case 3:
-                        equationE.innerHTML = 'E<sub>2</sub> = a<sub>1</sub> + a<sub>2</sub>·E<sub>1</sub> + a<sub>3</sub>·N<sub>1</sub> + a<sub>4</sub>·E<sub>1</sub>N<sub>1</sub> + a<sub>5</sub>·E<sub>1</sub><sup>2</sup> + a<sub>6</sub>·N<sub>1</sub><sup>2</sup> + a<sub>7</sub>·E<sub>1</sub><sup>2</sup>N<sub>1</sub> + a<sub>8</sub>·E<sub>1</sub>N<sub>1</sub><sup>2</sub> + a<sub>9</sub>·E<sub>1</sub><sup>3</sup> + a<sub>10</sub>·N<sub>1</sub><sup>3</sup>';
-                        equationN.innerHTML = 'N<sub>2</sub> = b<sub>1</sub> + b<sub>2</sub>·E<sub>1</sub> + b<sub>3</sub>·N<sub>1</sub> + b<sub>4</sub>·E<sub>1</sub>N<sub>1</sub> + b<sub>5</sub>·E<sub>1</sub><sup>2</sup> + b<sub>6</sub>·N<sub>1</sub><sup>2</sup> + b<sub>7</sub>·E<sub>1</sub><sup>2</sup>N<sub>1</sub> + b<sub>8</sub>·E<sub>1</sub>N<sub>1</sub><sup>2</sub> + b<sub>9</sub>·E<sub>1</sub><sup>3</sup> + b<sub>10</sub>·N<sub>1</sub><sup>3</sup>';
+                        equationE.innerHTML = 'E<sub>2</sub> = a<sub>1</sub> + a<sub>2</sub>·E<sub>1</sub> + a<sub>3</sub>·N<sub>1</sub> + a<sub>4</sub>·E<sub>1</sub>N<sub>1</sub> + a<sub>5</sub>·E<sub>1</sub><sup>2</sup> + a<sub>6</sub>·N<sub>1</sub><sup>2</sup> + a<sub>7</sub>·E<sub>1</sub><sup>2</sup>N<sub>1</sub> + a<sub>8</sub>·E<sub>1</sub>N<sub>1</sub><sup>2</sup> + a<sub>9</sub>·E<sub>1</sub><sup>3</sup> + a<sub>10</sub>·N<sub>1</sub><sup>3</sup>';
+                        equationN.innerHTML = 'N<sub>2</sub> = b<sub>1</sub> + b<sub>2</sub>·E<sub>1</sub> + b<sub>3</sub>·N<sub>1</sub> + b<sub>4</sub>·E<sub>1</sub>N<sub>1</sub> + b<sub>5</sub>·E<sub>1</sub><sup>2</sup> + b<sub>6</sub>·N<sub>1</sub><sup>2</sup> + b<sub>7</sub>·E<sub>1</sub><sup>2</sup>N<sub>1</sub> + b<sub>8</sub>·E<sub>1</sub>N<sub>1</sub><sup>2</sup> + b<sub>9</sub>·E<sub>1</sub><sup>3</sup> + b<sub>10</sub>·N<sub>1</sub><sup>3</sup>';
                         break;
                 }
             }
@@ -871,6 +941,10 @@
                     return;
                 }
             }
+            
+            // Get current precision setting
+            digits = parseInt(decimalDigits.value);
+            precisionResult.textContent = `${digits} digits`;
             
             showProcessing();
             
@@ -1309,12 +1383,12 @@
                 xFormatted = '';
                 // Global parameters for E2
                 for (let i = 0; i < 3; i++) {
-                    xFormatted += `${globalParamsE[i]} = ${results.X[i].toFixed(6)}\n`;
+                    xFormatted += `${globalParamsE[i]} = ${results.X[i].toFixed(digits)}\n`;
                 }
                 
                 // Local parameters for E2
                 for (let i = 0; i < results.numLocalParams; i++) {
-                    xFormatted += `wE_${i+1} = ${results.X[3 + i].toFixed(6)}\n`;
+                    xFormatted += `wE_${i+1} = ${results.X[3 + i].toFixed(digits)}\n`;
                 }
                 
                 xFormatted += '\n';
@@ -1322,12 +1396,12 @@
                 // Global parameters for N2
                 const offset = results.numGlobalParams + results.numLocalParams;
                 for (let i = 0; i < 3; i++) {
-                    xFormatted += `${globalParamsN[i]} = ${results.X[offset + i].toFixed(6)}\n`;
+                    xFormatted += `${globalParamsN[i]} = ${results.X[offset + i].toFixed(digits)}\n`;
                 }
                 
                 // Local parameters for N2
                 for (let i = 0; i < results.numLocalParams; i++) {
-                    xFormatted += `wN_${i+1} = ${results.X[offset + 3 + i].toFixed(6)}\n`;
+                    xFormatted += `wN_${i+1} = ${results.X[offset + 3 + i].toFixed(digits)}\n`;
                 }
             } else {
                 // Polynomial parameters
@@ -1335,7 +1409,7 @@
                     case 1:
                         const paramNames1 = ['a', 'b', 'c', 'd', 'e', 'f'];
                         xFormatted = results.X.map((val, i) => {
-                            return `${paramNames1[i]} = ${val.toFixed(6)}`;
+                            return `${paramNames1[i]} = ${val.toFixed(digits)}`;
                         }).join('\n');
                         break;
                     case 2:
@@ -1343,9 +1417,9 @@
                         const paramNames2N = ['b1', 'b2', 'b3', 'b4', 'b5', 'b6'];
                         xFormatted = results.X.map((val, i) => {
                             if (i < 6) {
-                                return `${paramNames2E[i]} = ${val.toFixed(6)}`;
+                                return `${paramNames2E[i]} = ${val.toFixed(digits)}`;
                             } else {
-                                return `${paramNames2N[i-6]} = ${val.toFixed(6)}`;
+                                return `${paramNames2N[i-6]} = ${val.toFixed(digits)}`;
                             }
                         }).join('\n');
                         break;
@@ -1354,9 +1428,9 @@
                         const paramNames3N = ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9', 'b10'];
                         xFormatted = results.X.map((val, i) => {
                             if (i < 10) {
-                                return `${paramNames3E[i]} = ${val.toFixed(6)}`;
+                                return `${paramNames3E[i]} = ${val.toFixed(digits)}`;
                             } else {
-                                return `${paramNames3N[i-10]} = ${val.toFixed(6)}`;
+                                return `${paramNames3N[i-10]} = ${val.toFixed(digits)}`;
                             }
                         }).join('\n');
                         break;
@@ -1365,25 +1439,25 @@
             xResult.textContent = xFormatted;
             
             // Format Qxx matrix
-            const qxxFormatted = formatMatrix(results.Qxx);
+            const qxxFormatted = formatMatrix(results.Qxx, digits);
             qxxResult.textContent = qxxFormatted;
             
             // Format Cxx matrix
-            const cxxFormatted = formatMatrix(results.Cxx);
+            const cxxFormatted = formatMatrix(results.Cxx, digits);
             cxxResult.textContent = cxxFormatted;
             
             // Format residuals V
             const vFormatted = results.V.map((val, i) => {
-                return `Point ${Math.floor(i/2)+1} ${i%2===0?'E':'N'}: ${val.toFixed(6)}`;
+                return `Point ${Math.floor(i/2)+1} ${i%2===0?'E':'N'}: ${val.toFixed(digits)}`;
             }).join('\n');
             vResult.textContent = vFormatted;
             
             // Display s0 and DOF
-            s0Result.textContent = results.s0.toFixed(6);
+            s0Result.textContent = results.s0.toFixed(digits);
             dofResult.textContent = results.dof;
         }
         
-        function formatMatrix(matrix) {
+        function formatMatrix(matrix, precision) {
             if (!matrix || matrix.length === 0) return 'No data';
             
             // For large matrices, show a summary
@@ -1395,7 +1469,7 @@
             const colWidths = new Array(matrix[0].length).fill(0);
             for (let i = 0; i < matrix.length; i++) {
                 for (let j = 0; j < matrix[i].length; j++) {
-                    const width = matrix[i][j].toFixed(6).length;
+                    const width = matrix[i][j].toFixed(precision).length;
                     if (width > colWidths[j]) colWidths[j] = width;
                 }
             }
@@ -1403,7 +1477,7 @@
             // Format with proper alignment
             return matrix.map(row => 
                 row.map((val, j) => {
-                    const str = val.toFixed(6);
+                    const str = val.toFixed(precision);
                     const padding = ' '.repeat(Math.max(0, colWidths[j] - str.length + 2));
                     return str + padding;
                 }).join('')
@@ -1413,11 +1487,12 @@
         // Download functions
         function downloadMatrix(filename, data) {
             let content = '';
+            const precision = digits;
             
             if (Array.isArray(data) && Array.isArray(data[0])) {
                 // 2D matrix
                 content = data.map(row => 
-                    row.map(val => val.toFixed(10)).join('\t')
+                    row.map(val => val.toFixed(precision)).join('\t')
                 ).join('\n');
             } else if (Array.isArray(data)) {
                 // Vector
@@ -1458,11 +1533,11 @@
                                 break;
                         }
                     }
-                    return `${paramName}\t${val.toFixed(10)}`;
+                    return `${paramName}\t${val.toFixed(precision)}`;
                 }).join('\n');
             } else {
                 // Single value
-                content = data.toString();
+                content = data.toFixed(precision).toString();
             }
             
             const blob = new Blob([content], { type: 'text/plain' });
@@ -1544,6 +1619,10 @@
             fileName.textContent = "Sample Data (8 points)";
             pointCount.textContent = "8";
             fileInfo.style.display = 'block';
+            
+            // Initialize precision
+            digits = parseInt(decimalDigits.value);
+            precisionResult.textContent = `${digits} digits`;
         }
         
         // Initialize with sample data on page load
