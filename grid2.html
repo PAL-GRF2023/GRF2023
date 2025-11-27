@@ -208,7 +208,7 @@
     </div>
     <div class="input-group">
         <label for="gridHeight">Height (m):</label>
-        <input type="number" id="gridHeight" value="933.4098">
+        <input type="number" id="gridHeight" value="900.00">
     </div>
     
     <div class="input-group">
@@ -392,8 +392,8 @@
 
 <script>
     // GRS80 ellipsoid parameters
-    const a = 6378137; // semi-major axis in meters
-    const f = 1 / 298.257222101; // flattening
+    const a = 6378137.0; // semi-major axis in meters
+    const f = 1 / 298.257222100882711243; // flattening
     const b = a * (1 - f); // semi-minor axis
     const e2 = 2 * f - f * f; // first eccentricity squared
 
@@ -638,12 +638,12 @@
                         // Create row based on selected fields
                         const row = [];
                         row.push(pointId.toString());
-                        if (document.getElementById('gridFieldEPal').checked) row.push(e.toFixed(4));
-                        if (document.getElementById('gridFieldNPal').checked) row.push(n.toFixed(4));
-                        if (document.getElementById('gridFieldHPal').checked) row.push(h.toFixed(4));
-                        if (document.getElementById('gridFieldEGrf').checked) row.push(easting1.toFixed(4));
-                        if (document.getElementById('gridFieldNGrf').checked) row.push(northing1.toFixed(4));
-                        if (document.getElementById('gridFieldHGrf').checked) row.push(newHeight.toFixed(4));
+                        if (document.getElementById('gridFieldEPal').checked) row.push(e.toFixed(5));
+                        if (document.getElementById('gridFieldNPal').checked) row.push(n.toFixed(5));
+                        if (document.getElementById('gridFieldHPal').checked) row.push(h.toFixed(5));
+                        if (document.getElementById('gridFieldEGrf').checked) row.push(easting1.toFixed(5));
+                        if (document.getElementById('gridFieldNGrf').checked) row.push(northing1.toFixed(5));
+                        if (document.getElementById('gridFieldHGrf').checked) row.push(newHeight.toFixed(5));
                         if (document.getElementById('gridFieldX').checked) row.push(Xt.toFixed(6));
                         if (document.getElementById('gridFieldY').checked) row.push(Yt.toFixed(6));
                         if (document.getElementById('gridFieldZ').checked) row.push(Zt.toFixed(6));
@@ -917,32 +917,32 @@
                 }
                 if (outputFields['E_Pal1923']) {
                     const td = document.createElement('td');
-                    td.textContent = point.e_pal1923.toFixed(4);
+                    td.textContent = point.e_pal1923.toFixed(5);
                     tr.appendChild(td);
                 }
                 if (outputFields['N_Pal1923']) {
                     const td = document.createElement('td');
-                    td.textContent = point.n_pal1923.toFixed(4);
+                    td.textContent = point.n_pal1923.toFixed(5);
                     tr.appendChild(td);
                 }
                 if (outputFields['H_Pal1923']) {
                     const td = document.createElement('td');
-                    td.textContent = point.h_pal1923.toFixed(4);
+                    td.textContent = point.h_pal1923.toFixed(5);
                     tr.appendChild(td);
                 }
                 if (outputFields['E_PalGRF']) {
                     const td = document.createElement('td');
-                    td.textContent = point.e_palgrf.toFixed(4);
+                    td.textContent = point.e_palgrf.toFixed(5);
                     tr.appendChild(td);
                 }
                 if (outputFields['N_PalGRF']) {
                     const td = document.createElement('td');
-                    td.textContent = point.n_palgrf.toFixed(4);
+                    td.textContent = point.n_palgrf.toFixed(5);
                     tr.appendChild(td);
                 }
                 if (outputFields['H_PalGRF']) {
                     const td = document.createElement('td');
-                    td.textContent = point.h_palgrf.toFixed(4);
+                    td.textContent = point.h_palgrf.toFixed(5);
                     tr.appendChild(td);
                 }
                 if (outputFields['X_GRF']) {
@@ -1016,12 +1016,12 @@
             transformedTextData.forEach(point => {
                 const row = [];
                 if (outputFields['ID']) row.push(point.id);
-                if (outputFields['E_Pal1923']) row.push(point.e_pal1923.toFixed(4));
-                if (outputFields['N_Pal1923']) row.push(point.n_pal1923.toFixed(4));
-                if (outputFields['H_Pal1923']) row.push(point.h_pal1923.toFixed(4));
-                if (outputFields['E_PalGRF']) row.push(point.e_palgrf.toFixed(4));
-                if (outputFields['N_PalGRF']) row.push(point.n_palgrf.toFixed(4));
-                if (outputFields['H_PalGRF']) row.push(point.h_palgrf.toFixed(4));
+                if (outputFields['E_Pal1923']) row.push(point.e_pal1923.toFixed(5));
+                if (outputFields['N_Pal1923']) row.push(point.n_pal1923.toFixed(5));
+                if (outputFields['H_Pal1923']) row.push(point.h_pal1923.toFixed(5));
+                if (outputFields['E_PalGRF']) row.push(point.e_palgrf.toFixed(5));
+                if (outputFields['N_PalGRF']) row.push(point.n_palgrf.toFixed(5));
+                if (outputFields['H_PalGRF']) row.push(point.h_palgrf.toFixed(5));
                 if (outputFields['X_GRF']) row.push(point.x_grf.toFixed(6));
                 if (outputFields['Y_GRF']) row.push(point.y_grf.toFixed(6));
                 if (outputFields['Z_GRF']) row.push(point.z_grf.toFixed(6));
@@ -1063,4 +1063,5 @@
 </script>
 
 </body>
+
 </html>
